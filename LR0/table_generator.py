@@ -71,7 +71,8 @@ def new_table(grammar1):
         for i in list(g[1]):
             my_dictionary[i] = '';
     my_table = [];
-    # e ''
+    my_dictionary['e']='';
+    my_dictionary['']='';
     del my_dictionary['e'];
     del my_dictionary[''];
 

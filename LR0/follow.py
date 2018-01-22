@@ -1,7 +1,108 @@
-from first import get_first
+import re;
+
+
+class firstclass:
+    def __init__(self):
+        pass;
+
+    def get_first(self,grammar):
+        first_dictionary = {};
+        for i in grammar.keys():
+            first_dictionary[i] = self.fl_function(i, grammar, first_dictionary);
+
+        for i in first_dictionary:
+            first_dictionary[i] = list(set(first_dictionary[i]));
+
+        self.ce_function(grammar, first_dictionary);
+        return first_dictionary;
+
+    def fl_function(self,nt, grammar, first):
+
+        first_list = [];
+        for i in grammar[nt]:
+
+            reg_result = re.search("[A-Z]+", i);
+            if reg_result:
+                if reg_result.start() > 0:
+                    first_list.append(i[0]);
+                elif reg_result.start() == 0:
+                    temp = self.ns_function(i, first, grammar);
+                    if temp:
+                        first_list = first_list + temp;
+
+            else:
+                if i is not "e":
+                    first_list.append(i[0]);
+
+        if "e" in grammar[nt]:
+            if "e" not in first_list:
+                first_list.append("e");
+
+        return first_list;
+
+    def ns_function(self,production, first, grammar):
+        first_list = [];
+        for i in production:
+            if i in first:
+                first_list = first_list + first[i];
+
+            else:
+                if i.isupper():
+                    first_list = first_list + self.fl_function(i, grammar, first);
+                else:
+                    return first_list;
+
+            if len(production) > 1:
+
+                if "e" in grammar[i]:
+                    for j in range(first_list.count("e")):
+                        first_list.remove("e");
+
+                    if production.index(i) + 1 < len(production) and production[production.index(i) + 1:][
+                        0].isupper():
+                        temp = self.fl_function(production[production.index(i) + 1:][0], grammar, first);
+                        first_list = first_list + temp;
+                        if "e" in temp:
+                            continue;
+                        else:
+                            return first_list;
+
+                    elif production.index(i) + 1 < len(production) and production[production.index(i) + 1:][
+                        0].islower():
+                        first_list.append(production[production.index(i) + 1:][0]);
+                        return first_list;
+                else:
+                    return first_list;
+
+        return first_list;
+
+    def ce_function(self,grammar, first):
+        for nt in grammar.keys():
+            for i in grammar[nt]:
+                reg_result = re.match("[A-Z]+", i);
+                if reg_result:
+                    if reg_result.end() == len(i):
+                        epsilon = True;
+                        for symbol in i:
+                            if 'e' not in first[symbol]:
+                                epsilon = False;
+                                break;
+                        if epsilon:
+                            if 'e' not in first[nt]:
+                                first[nt].append('e');
+                        else:
+                            if 'e' in first[nt]:
+                                first[nt].remove('e');
+
+
+
+
+
+
 
 
 def follows_of_grammar(grammar):
+    my_object=firstclass();
     no_follow = {};
     follow_dictionary = {};
     g_d = {};
@@ -18,7 +119,7 @@ def follows_of_grammar(grammar):
             g_d[my_temp[0]].append(my_temp[1]);
         else: g_d[my_temp[0]] = [my_temp[1]];
 
-    first_set = get_first(g_d);
+    first_set = my_object.get_first(g_d);
 
     for i in ordered_symbol[1:]:
         follow_dictionary[i] = [];
@@ -46,10 +147,16 @@ def fp_function(grammar, s):
             if s in j:
                 my_temp.append(j);
         found_ones[i] = my_temp;
+    keys_temp_list = []
     for i in found_ones.keys():
         if 0==len(found_ones[i]):
-            del found_ones[i];
+            keys_temp_list.append(i);
+    for i in keys_temp_list:
+             del found_ones[i];
     return found_ones;
+
+
+
 
 
 def operation_function(productions, first_set, follow, no_follow, symbol):
